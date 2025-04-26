@@ -12,47 +12,45 @@ jobs:
           MYSQL_DATABASE: contents_meet_test
         ports:
           - "3306:3306"
+
     steps:
       - uses: actions/checkout@v4
 
-      # PHP 8.4 + Composer セットアップ
-      - uses: shivammathur/setup-php@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          coverage: none
 
-      # ① backend 配下で依存をインストール
       - name: Install Composer deps
         run: composer install --no-interaction --prefer-dist --ansi
         working-directory: backend
 
-      # ② .env を作成 → MySQL 用に上書き → APP_KEY 生成
-      - name: Prepare .env
+      - name: Prepare .env for MySQL
         run: |
           cp .env.example .env
           echo "DB_CONNECTION=mysql"    >> .env
           echo "DB_HOST=db"             >> .env
+          echo "DB_PORT=3306"           >> .env
           echo "DB_DATABASE=contents_meet_test" >> .env
           echo "DB_USERNAME=root"       >> .env
           echo "DB_PASSWORD=secret"     >> .env
           php artisan key:generate
         working-directory: backend
 
-      # ③ マイグレーション
       - name: Run migrations
         run: php artisan migrate --force
         working-directory: backend
 
-      # ④ PHPUnit
       - name: PHPUnit
-        run: php artisan test --colors=always
+        run: php artisan test --no-ansi
         working-directory: backend
 
   test-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '21'
       - name: Install & Lint
