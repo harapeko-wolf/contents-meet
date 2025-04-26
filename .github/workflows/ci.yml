@@ -4,6 +4,16 @@ on: [push, pull_request]
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+
+    # ここで MySQL サービス名 db を指す環境変数を上書き
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: contents_meet_test
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+
     services:
       db:
         image: mysql:8
@@ -25,18 +35,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --ansi
         working-directory: backend
 
-      - name: Prepare .env for MySQL
-        run: |
-          cp .env.example .env
-          echo "DB_CONNECTION=mysql"    >> .env
-          echo "DB_HOST=db"             >> .env
-          echo "DB_PORT=3306"           >> .env
-          echo "DB_DATABASE=contents_meet_test" >> .env
-          echo "DB_USERNAME=root"       >> .env
-          echo "DB_PASSWORD=secret"     >> .env
-          php artisan key:generate
-        working-directory: backend
-
+      # ここでは .env をいじらず、env: で上書き済みの環境変数を使う
       - name: Run migrations
         run: php artisan migrate --force
         working-directory: backend
