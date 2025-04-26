@@ -1,5 +1,6 @@
 name: CI
 on: [push, pull_request]
+
 jobs:
   test-backend:
     runs-on: ubuntu-latest
@@ -9,25 +10,31 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: secret
           MYSQL_DATABASE: contents_meet_test
-        ports: ["3306:3306"]
+        ports:
+          - "3306:3306"
     steps:
       - uses: actions/checkout@v4
 
-      # PHP 8.4 + Composer をセットアップ
+      # PHP 8.4 + Composer セットアップ
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           coverage: none
 
-      # ① backend ディレクトリで Composer
+      # ① backend 配下で依存をインストール
       - name: Install Composer deps
         run: composer install --no-interaction --prefer-dist --ansi
         working-directory: backend
 
-      # ② .env と APP_KEY
+      # ② .env を作成 → MySQL 用に上書き → APP_KEY 生成
       - name: Prepare .env
         run: |
           cp .env.example .env
+          echo "DB_CONNECTION=mysql"    >> .env
+          echo "DB_HOST=db"             >> .env
+          echo "DB_DATABASE=contents_meet_test" >> .env
+          echo "DB_USERNAME=root"       >> .env
+          echo "DB_PASSWORD=secret"     >> .env
           php artisan key:generate
         working-directory: backend
 
@@ -36,14 +43,20 @@ jobs:
         run: php artisan migrate --force
         working-directory: backend
 
-      # ④ テスト実行
+      # ④ PHPUnit
       - name: PHPUnit
         run: php artisan test --colors=always
         working-directory: backend
+
   test-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: '21'}
-      - run: cd frontend && npm ci && npm run lint
+        with:
+          node-version: '21'
+      - name: Install & Lint
+        run: |
+          cd frontend
+          npm ci
+          npm run lint
