@@ -1,25 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🟢 Starting containers…"
-docker compose up -d
+echo "🟢 バックエンド＆DB を起動…"
+docker compose up -d backend db
 
-echo "🛠️  Installing dependencies…"
+echo "🛠️  バックエンド依存をインストール…"
 docker compose exec backend composer install --no-interaction --prefer-dist
-docker compose exec frontend npm ci
 
-echo "🧪  Preparing backend env & database…"
-docker compose exec backend cp .env.example .env
-docker compose exec backend php artisan key:generate
-docker compose exec backend php artisan migrate --force
+echo "🧪  Laravel テスト実行…"
+docker compose exec backend php artisan test --no-ansi
 
-echo "✅  Running Laravel tests…"
-docker compose exec backend php artisan test --colors=always
+echo "✅  フロント用コンテナを一時ビルド & Lint…"
+docker compose build frontend
+docker compose run --rm frontend sh -lc "npm ci && npm run lint"
 
-echo "✅  Running frontend lint…"
-docker compose exec frontend npm run lint
-
-# echo "✅  Running frontend tests…"
-# docker compose exec frontend npm test
-
-echo "🎉  All tests passed!"
+echo "🎉  全テスト＆Lint が成功しました！"
