@@ -1,0 +1,2 @@
+FROM mysql:8
+ENV MYSQL_ROOT_PASSWORD=secret MYSQL_DATABASE=contents_meet
