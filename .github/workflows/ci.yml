@@ -7,7 +7,7 @@ jobs:
 
     env:
       DB_CONNECTION: mysql
-      DB_HOST: 127.0.0.1        # ← サービスを localhost で参照
+      DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_DATABASE: contents_meet_test
       DB_USERNAME: root
@@ -19,7 +19,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: secret
           MYSQL_DATABASE: contents_meet_test
-        # ポートを公開してランナーから localhost:3306 で繋ぐ
         ports:
           - "3306:3306"
 
@@ -35,8 +34,8 @@ jobs:
         run: composer install --no-interaction --prefer-dist --ansi
         working-directory: backend
 
-        - name: Generate APP_KEY
-        # 'php artisan key:generate --show' でキーのみ取得し GITHUB_ENV に登録
+      - name: Generate APP_KEY
+        # --show で生成キーのみを出力し、GITHUB_ENV に登録
         run: echo "APP_KEY=$(cd backend && php artisan key:generate --show)" >> $GITHUB_ENV
 
       - name: Run migrations
@@ -51,10 +50,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '21'
+
       - name: Install & Lint
         run: |
           cd frontend
