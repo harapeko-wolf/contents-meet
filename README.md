@@ -50,3 +50,4 @@
   - **Docker コンテナ実行**: `docker compose up frontend` で Next.js が動作するため、ホストに Node.js をインストールする必要はありません。
   - **ローカル開発（ホストマシン上で直接実行する場合）**: コンテナを使わずに `npm run dev` などを実行する際にのみ、ホストマシンに Node.js と npm が必要です。
 
+# テスト
